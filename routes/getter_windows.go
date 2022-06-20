@@ -3,144 +3,161 @@
 package routes
 
 import (
-	"errors"
+	"encoding/binary"
 	"golang.org/x/sys/windows"
-	"syscall"
+	"net/netip"
+	"strconv"
 	"unsafe"
 )
 
-var (
-	AF_UNSPEC              uint16 = 0
-	AF_INET                uint16 = 2
-	AF_INET6               uint16 = 23
-	iphlpDLL                      = syscall.NewLazyDLL("IPHLPAPI.dll")
-	procGetIPForwardTable2        = iphlpDLL.NewProc("GetIpForwardTable2")
+// Types defined here does not need to judge 32bit or 64bit.
+// Code from wireguard is licensed under MIT.
+// Partially Grabbed from https://github.com/wireguard/wireguard-windows , tunnel/winipcfg/types.go
+
+const (
+	anySize = 1
 )
 
-var NL_ROUTE_PROTOCOL = map[uint32]string{
-	uint32(1):  "RouteProtocolOther",
-	uint32(2):  "RouteProtocolLocal",
-	uint32(3):  "RouteProtocolNetMgmt",
-	uint32(4):  "RouteProtocolIcmp",
-	uint32(5):  "RouteProtocolEgp",
-	uint32(6):  "RouteProtocolGgp",
-	uint32(7):  "RouteProtocolHello",
-	uint32(8):  "RouteProtocolRip",
-	uint32(9):  "RouteProtocolIsIs",
-	uint32(10): "RouteProtocolEsIs",
-	uint32(11): "RouteProtocolCisco",
-	uint32(12): "RouteProtocolBbn",
-	uint32(13): "RouteProtocolOspf",
-	uint32(14): "RouteProtocolBgp",
-	uint32(15): "RouteProtocolIdpr",
-	uint32(16): "RouteProtocolEigrp",
-	uint32(17): "RouteProtocolDvmrp",
-	uint32(18): "RouteProtocolRpl",
-	uint32(19): "RouteProtocolDhcp",
+var (
+	AF_UNSPEC uint16 = 0
+	AF_INET   uint16 = 2
+	AF_INET6  uint16 = 23
+)
+
+// RouteProtocol enumeration type defines the routing mechanism that an IP route was added with, as described in RFC 4292.
+// https://docs.microsoft.com/en-us/windows/desktop/api/nldef/ne-nldef-nl_route_protocol
+type RouteProtocol uint32
+
+const (
+	RouteProtocolOther RouteProtocol = iota + 1
+	RouteProtocolLocal
+	RouteProtocolNetMgmt
+	RouteProtocolIcmp
+	RouteProtocolEgp
+	RouteProtocolGgp
+	RouteProtocolHello
+	RouteProtocolRip
+	RouteProtocolIsIs
+	RouteProtocolEsIs
+	RouteProtocolCisco
+	RouteProtocolBbn
+	RouteProtocolOspf
+	RouteProtocolBgp
+	RouteProtocolIdpr
+	RouteProtocolEigrp
+	RouteProtocolDvmrp
+	RouteProtocolRpl
+	RouteProtocolDHCP
+	RouteProtocolNTAutostatic   = 10002
+	RouteProtocolNTStatic       = 10006
+	RouteProtocolNTStaticNonDOD = 10007
+)
+
+// RouteOrigin enumeration type defines the origin of the IP route.
+// https://docs.microsoft.com/en-us/windows/desktop/api/nldef/ne-nldef-nl_route_origin
+type RouteOrigin uint32
+
+const (
+	RouteOriginManual RouteOrigin = iota
+	RouteOriginWellKnown
+	RouteOriginDHCP
+	RouteOriginRouterAdvertisement
+	RouteOrigin6to4
+)
+
+type AddressFamily uint16
+
+// RawSockaddrInet union contains an IPv4, an IPv6 address, or an address family.
+// https://docs.microsoft.com/en-us/windows/desktop/api/ws2ipdef/ns-ws2ipdef-_sockaddr_inet
+type RawSockaddrInet struct {
+	Family AddressFamily
+	data   [26]byte
 }
 
-var NL_ROUTE_ORIGIN = map[uint32]string{
-	uint32(0): "NlroManual",
-	uint32(1): "NlroWellKnown",
-	uint32(2): "NlroDHCP",
-	uint32(3): "NlroRouterAdvertisement",
-	uint32(4): "Nlro6to4",
+func ntohs(i uint16) uint16 {
+	return binary.BigEndian.Uint16((*[2]byte)(unsafe.Pointer(&i))[:])
 }
 
-type IP_ADDRESS_PREFIX struct {
-	Prefix       *windows.RawSockaddrAny // sockaddr_inet
-	PrefixLength byte                    // uint8
+func htons(i uint16) uint16 {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, i)
+	return *(*uint16)(unsafe.Pointer(&b[0]))
 }
 
-type _NL_ROUTE_ORIGIN = uint32
-type _NL_ROUTE_PROTOCOL = uint32
-
-type _NET_LUID struct {
-	// equals to NET_LUID_LH
-	Value uint64 // length 8
-	// [0:24] Reserved, [24:48] NetLuidIndex, [48:64] IfType
+// AddrPort returns the IP address and port.
+func (addr *RawSockaddrInet) AddrPort() netip.AddrPort {
+	return netip.AddrPortFrom(addr.Addr(), addr.Port())
 }
 
-// length 104
-type MIB_IPFORWARD_ROW2 struct {
-	InterfaceLuid        _NET_LUID // length 8
-	InterfaceIndex       uint32    // ulong
-	DestinationPrefix    IP_ADDRESS_PREFIX
-	NextHop              windows.RawSockaddrAny // sockaddr_inet
-	SitePrefixLength     byte                   // unsigned char, uint8
-	ValidLifetime        uint32                 // ulong
-	PreferredLifetime    uint32                 // ulong
-	Metric               uint32                 // ulong
-	Protocol             _NL_ROUTE_PROTOCOL     // enum
-	Loopback             byte                   // bool, uint8
-	AutoconfigureAddress byte                   // bool, uint8
-	Publish              byte                   // bool, uint8
-	Immortal             byte                   // bool, uint8
-	Age                  uint32                 // ulong
-	Origin               _NL_ROUTE_ORIGIN       // enum
+// Addr returns IPv4 or IPv6 address, or an invalid address if the address is neither.
+func (addr *RawSockaddrInet) Addr() netip.Addr {
+	switch addr.Family {
+	case windows.AF_INET:
+		return netip.AddrFrom4((*windows.RawSockaddrInet4)(unsafe.Pointer(addr)).Addr)
+	case windows.AF_INET6:
+		raw := (*windows.RawSockaddrInet6)(unsafe.Pointer(addr))
+		a := netip.AddrFrom16(raw.Addr)
+		if raw.Scope_id != 0 {
+			a = a.WithZone(strconv.FormatUint(uint64(raw.Scope_id), 10))
+		}
+		return a
+	}
+	return netip.Addr{}
 }
 
-type MIB_IPFORWARD_TABLE2 struct {
-	NumEntries uint32
-	Table      [1]MIB_IPFORWARD_ROW2
+// Port returns the port if the address if IPv4 or IPv6, or 0 if neither.
+func (addr *RawSockaddrInet) Port() uint16 {
+	switch addr.Family {
+	case windows.AF_INET:
+		return ntohs((*windows.RawSockaddrInet4)(unsafe.Pointer(addr)).Port)
+	case windows.AF_INET6:
+		return ntohs((*windows.RawSockaddrInet6)(unsafe.Pointer(addr)).Port)
+	}
+	return 0
+}
+
+// IPAddressPrefix structure stores an IP address prefix.
+// https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/ns-netioapi-_ip_address_prefix
+type IPAddressPrefix struct {
+	RawPrefix    RawSockaddrInet
+	PrefixLength uint8
+	_            [2]byte
+}
+
+// Prefix returns IP address prefix as netip.Prefix.
+func (prefix *IPAddressPrefix) Prefix() netip.Prefix {
+	switch prefix.RawPrefix.Family {
+	case windows.AF_INET:
+		return netip.PrefixFrom(netip.AddrFrom4((*windows.RawSockaddrInet4)(unsafe.Pointer(&prefix.RawPrefix)).Addr), int(prefix.PrefixLength))
+	case windows.AF_INET6:
+		return netip.PrefixFrom(netip.AddrFrom16((*windows.RawSockaddrInet6)(unsafe.Pointer(&prefix.RawPrefix)).Addr), int(prefix.PrefixLength))
+	}
+	return netip.Prefix{}
+}
+
+// LUID represents a network interface.
+type LUID uint64
+
+// MibIPforwardRow2 structure stores information about an IP route entry.
+// https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/ns-netioapi-_mib_ipforward_row2
+type MibIPforwardRow2 struct {
+	InterfaceLUID        LUID
+	InterfaceIndex       uint32
+	DestinationPrefix    IPAddressPrefix
+	NextHop              RawSockaddrInet
+	SitePrefixLength     uint8
+	ValidLifetime        uint32
+	PreferredLifetime    uint32
+	Metric               uint32
+	Protocol             RouteProtocol
+	Loopback             bool
+	AutoconfigureAddress bool
+	Publish              bool
+	Immortal             bool
+	Age                  uint32
+	Origin               RouteOrigin
 }
 
 func Retrieve() ([]NetRoute, error) {
-	// call sys function
-	optTable, err := getIPForwardTable2(AF_INET)
-	if err != nil {
-		return nil, err
-	}
-	// parse returned memory
-	tablePtr := (*MIB_IPFORWARD_TABLE2)(unsafe.Pointer(&optTable[0]))
-	rowsInTable := make([]MIB_IPFORWARD_ROW2, int(tablePtr.NumEntries))
-	for i := 0; i < int(tablePtr.NumEntries); i++ {
-		// parse struct into slice of object
-		rowsInTable[i] = *(*MIB_IPFORWARD_ROW2)(unsafe.Pointer(uintptr(unsafe.Pointer(&tablePtr.Table[0])) + uintptr(i)*unsafe.Sizeof(tablePtr.Table[0])))
-	}
-	// parse single row
-	resNetRoutes := make([]NetRoute, 0)
-	for _, v := range rowsInTable {
-		// check if family is AF_INET, else pass
-		if v.NextHop.Addr.Family != AF_INET {
-			continue
-		}
-		// build NR
-		netRoute := NetRoute{}
-		// check metric
 
-		// check dest
-
-		// check next hop
-
-		// check flag
-
-		// check netif
-
-		// append to result
-		resNetRoutes = append(resNetRoutes, netRoute)
-	}
-
-	return nil, nil
-}
-
-func getIPForwardTable2(addr_famliy uint16) ([]byte, error) {
-	if addr_famliy != AF_INET && addr_famliy != AF_INET6 && addr_famliy != AF_UNSPEC {
-		return nil, errors.New("unknown address family.")
-	}
-	bufSize := 8192
-	bufFact := 1
-	for {
-		buf := make([]byte, bufSize*bufFact)
-		ret, _, errno := procGetIPForwardTable2.Call(uintptr(addr_famliy), uintptr(unsafe.Pointer(&buf)))
-		if ret != 0 {
-			if syscall.Errno(ret) == syscall.ERROR_INSUFFICIENT_BUFFER {
-				bufFact++
-				buf = make([]byte, bufSize*bufFact)
-				continue
-			}
-			return nil, errno
-		}
-		return buf, nil
-	}
 }
