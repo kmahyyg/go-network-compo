@@ -3,21 +3,19 @@
 package routes
 
 import (
+	"errors"
 	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
 )
 
-const (
-	AF_UNSPEC = 0
-	AF_INET   = 2
-	AF_INET6  = 23
+var (
+	AF_UNSPEC              uint16 = 0
+	AF_INET                uint16 = 2
+	AF_INET6               uint16 = 23
+	iphlpDLL                      = syscall.NewLazyDLL("IPHLPAPI.dll")
+	procGetIPForwardTable2        = iphlpDLL.NewProc("GetIpForwardTable2")
 )
-
-type IP_ADDRESS_PREFIX struct {
-	Prefix       *windows.RawSockaddrAny
-	PrefixLength byte
-}
 
 var NL_ROUTE_PROTOCOL = map[uint32]string{
 	uint32(1):  "RouteProtocolOther",
@@ -49,48 +47,67 @@ var NL_ROUTE_ORIGIN = map[uint32]string{
 	uint32(4): "Nlro6to4",
 }
 
-type MIB_IPFORWARD_ROW2 struct {
-	InterfaceLuid        uint64
-	InterfaceIndex       uint32
-	DestinationPrefix    IP_ADDRESS_PREFIX
-	NextHop              windows.RawSockaddrAny
-	SitePrefixLength     byte
-	ValidLifetime        uint32
-	PreferredLifetime    uint32
-	Metric               uint32
-	Protocol             uint32
-	Loopback             bool
-	AutoconfigureAddress bool
-	Publish              bool
-	Immortal             bool
-	Age                  uint32
-	Origin               byte
+type IP_ADDRESS_PREFIX struct {
+	Prefix       *windows.RawSockaddrAny // sockaddr_inet
+	PrefixLength byte                    // uint8
 }
 
-type win_MIB_IPFORWARD_TABLE2 struct {
+type _NL_ROUTE_ORIGIN = uint32
+type _NL_ROUTE_PROTOCOL = uint32
+
+type _NET_LUID struct {
+	// equals to NET_LUID_LH
+	Value uint64 // length 8
+	// [0:24] Reserved, [24:48] NetLuidIndex, [48:64] IfType
+}
+
+// length 104
+type MIB_IPFORWARD_ROW2 struct {
+	InterfaceLuid        _NET_LUID // length 8
+	InterfaceIndex       uint32    // ulong
+	DestinationPrefix    IP_ADDRESS_PREFIX
+	NextHop              windows.RawSockaddrAny // sockaddr_inet
+	SitePrefixLength     byte                   // unsigned char, uint8
+	ValidLifetime        uint32                 // ulong
+	PreferredLifetime    uint32                 // ulong
+	Metric               uint32                 // ulong
+	Protocol             _NL_ROUTE_PROTOCOL     // enum
+	Loopback             byte                   // bool, uint8
+	AutoconfigureAddress byte                   // bool, uint8
+	Publish              byte                   // bool, uint8
+	Immortal             byte                   // bool, uint8
+	Age                  uint32                 // ulong
+	Origin               _NL_ROUTE_ORIGIN       // enum
+}
+
+type MIB_IPFORWARD_TABLE2 struct {
 	NumEntries uint32
-	Table      []MIB_IPFORWARD_ROW2
+	Table      [1]MIB_IPFORWARD_ROW2
 }
 
 func Retrieve() ([]NetRoute, error) {
-
+	optTable, err := getIPForwardTable2(AF_INET)
+	if err != nil {
+		return nil, err
+	}
+	tablePtr := (*MIB_IPFORWARD_TABLE2)(unsafe.Pointer(&optTable[0]))
+	rowsInTable := make([]MIB_IPFORWARD_ROW2, int(tablePtr.NumEntries))
+	for i := 0; i < int(tablePtr.NumEntries); i++ {
+		rowsInTable[i] = *(*MIB_IPFORWARD_ROW2)(unsafe.Pointer(uintptr(unsafe.Pointer(&tablePtr.Table[0])) + uintptr(i)*unsafe.Sizeof(tablePtr.Table[0])))
+	}
+	return nil, nil
 }
 
-func getIPForwardTable2(addr_famliy uint8) (any, error) {
+func getIPForwardTable2(addr_famliy uint16) ([]byte, error) {
+	if addr_famliy != AF_INET && addr_famliy != AF_INET6 && addr_famliy != AF_UNSPEC {
+		return nil, errors.New("unknown address family.")
+	}
+	bufSize := 8192
+	bufFact := 1
 	for {
-		bufSize := 4096
-		bufFact := 1
 		buf := make([]byte, bufSize*bufFact)
 		optTable := &buf[0]
-		iphlpDLL, err := syscall.LoadLibrary("IPHLPAPI.dll")
-		if err != nil {
-			return nil, err
-		}
-		procGetIPForwardTable2, err := syscall.GetProcAddress(iphlpDLL, "GetIpForwardTable2")
-		if err != nil {
-			return nil, err
-		}
-		ret, _, errno := syscall.SyscallN(procGetIPForwardTable2, uintptr(addr_famliy), uintptr(unsafe.Pointer(optTable)))
+		ret, _, errno := procGetIPForwardTable2.Call(uintptr(addr_famliy), uintptr(unsafe.Pointer(optTable)))
 		if ret != 0 {
 			if syscall.Errno(ret) == syscall.ERROR_INSUFFICIENT_BUFFER {
 				bufFact++
@@ -99,6 +116,6 @@ func getIPForwardTable2(addr_famliy uint8) (any, error) {
 			}
 			return nil, errno
 		}
-		return optTable, nil
+		return buf, nil
 	}
 }
