@@ -86,15 +86,41 @@ type MIB_IPFORWARD_TABLE2 struct {
 }
 
 func Retrieve() ([]NetRoute, error) {
+	// call sys function
 	optTable, err := getIPForwardTable2(AF_INET)
 	if err != nil {
 		return nil, err
 	}
+	// parse returned memory
 	tablePtr := (*MIB_IPFORWARD_TABLE2)(unsafe.Pointer(&optTable[0]))
 	rowsInTable := make([]MIB_IPFORWARD_ROW2, int(tablePtr.NumEntries))
 	for i := 0; i < int(tablePtr.NumEntries); i++ {
+		// parse struct into slice of object
 		rowsInTable[i] = *(*MIB_IPFORWARD_ROW2)(unsafe.Pointer(uintptr(unsafe.Pointer(&tablePtr.Table[0])) + uintptr(i)*unsafe.Sizeof(tablePtr.Table[0])))
 	}
+	// parse single row
+	resNetRoutes := make([]NetRoute, 0)
+	for _, v := range rowsInTable {
+		// check if family is AF_INET, else pass
+		if v.NextHop.Addr.Family != AF_INET {
+			continue
+		}
+		// build NR
+		netRoute := NetRoute{}
+		// check metric
+
+		// check dest
+
+		// check next hop
+
+		// check flag
+
+		// check netif
+
+		// append to result
+		resNetRoutes = append(resNetRoutes, netRoute)
+	}
+
 	return nil, nil
 }
 
@@ -106,8 +132,7 @@ func getIPForwardTable2(addr_famliy uint16) ([]byte, error) {
 	bufFact := 1
 	for {
 		buf := make([]byte, bufSize*bufFact)
-		optTable := &buf[0]
-		ret, _, errno := procGetIPForwardTable2.Call(uintptr(addr_famliy), uintptr(unsafe.Pointer(optTable)))
+		ret, _, errno := procGetIPForwardTable2.Call(uintptr(addr_famliy), uintptr(unsafe.Pointer(&buf)))
 		if ret != 0 {
 			if syscall.Errno(ret) == syscall.ERROR_INSUFFICIENT_BUFFER {
 				bufFact++
