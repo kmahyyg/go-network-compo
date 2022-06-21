@@ -22,7 +22,6 @@ Linux:
 
 Parse /proc/net/route file.
 
-
 ## Note
 
 might need root permission on Mac OS.
