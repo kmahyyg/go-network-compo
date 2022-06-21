@@ -25,7 +25,7 @@ func (nr NetRoute) ToPortableJSON() string {
 
 func (nr NetRoute) ToTableString() string {
 	// NR doesn't have any header
-	return fmt.Sprintf("%s \tvia %s \tdev %s \tflags %s \tmetric %d\n", nr.Destination, nr.Gateway, nr.NetIf, nr.Flags, nr.Metric)
+	return fmt.Sprintf("%s\tvia %s\tdev %s\tflags %s\tmetric %d\n", nr.Destination, nr.Gateway, nr.NetIf, nr.Flags, nr.Metric)
 }
 
 type RouteFlag struct {

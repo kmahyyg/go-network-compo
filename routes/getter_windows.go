@@ -36,14 +36,14 @@ func RetrieveFlagFromMibRow2(mibIfRow *MibIfRow2, mibIpFwdRow *MibIPforwardRow2)
 	return RouteFlag{
 		U:        mibIfRow.OperStatus == IfOperStatusUp && mibIpFwdRow.Publish,
 		H:        int(mibIpFwdRow.DestinationPrefix.PrefixLength) == 32,
-		G:        mibIpFwdRow.NextHop.Addr().String() == "0.0.0.0/0",
+		G:        mibIpFwdRow.DestinationPrefix.RawPrefix.Addr().String() == "0.0.0.0",
 		S:        mibIpFwdRow.Immortal,
-		Cloned:   false, // windows not support
-		W:        false, // windows not support
-		L:        false, // not related to hardware
-		Reinsta:  false, // unknown
-		D:        false, // routing daemon not available here
-		M:        false, // routing daemon not available here
+		Cloned:   false,                                            // windows not support
+		W:        false,                                            // windows not support
+		L:        false,                                            // not related to hardware
+		Reinsta:  false,                                            // unknown
+		D:        mibIpFwdRow.NextHop.Addr().String() == "0.0.0.0", // routing daemon not available here
+		M:        false,                                            // routing daemon not available here
 		A:        mibIpFwdRow.AutoconfigureAddress,
 		Cached:   false,
 		Rejected: false, // always false here in Chinese
