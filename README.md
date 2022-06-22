@@ -12,6 +12,11 @@ Mac OS / BSD variant:
 
 We use golang.org/x/net/route package to fetch route table.
 
+for Mac OS: Raise kernel shared memory limit by put the plist to `/Library/LaunchDaemons/` and autostart via `launchctl load xxx.plist`,
+File owner should be root:wheel.
+
+for BSD: I don't know.
+
 Windows:
 
 Use syscall to load API from dll then call.

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+ <key>Label</key>
+ <string>com.startup.shmemsetup</string>
+ <key>LaunchOnlyOnce</key>
+ <true/>
+ <key>ProgramArguments</key>
+ <array>
+   <string>/usr/sbin/sysctl</string>
+   <string>kern.sysv.shmmax=524288000</string>
+   <string>kern.sysv.shmseg=128</string>
+   <string>kern.sysv.shmall=131072000</string>
+   <string>kern.maxprocperuid=4000</string>
+  </array>
+ <key>RunAtLoad</key>
+ <true/>
+</dict>
+</plist>

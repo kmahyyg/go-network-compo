@@ -8,7 +8,8 @@ import (
 func main() {
 	data, err := routes.Retrieve()
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		return
 	}
 	for _, v := range data {
 		fmt.Println(v.ToTableString())
