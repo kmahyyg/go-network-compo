@@ -5,7 +5,10 @@ import (
 	"fmt"
 )
 
-func bytes2IPv4(b [4]byte) string {
+func bytes2IPv4(b [4]byte, isLinux bool) string {
+	if isLinux {
+		return fmt.Sprintf("%d.%d.%d.%d", b[3], b[2], b[1], b[0])
+	}
 	return fmt.Sprintf("%d.%d.%d.%d", b[0], b[1], b[2], b[3])
 }
 

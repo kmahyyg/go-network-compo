@@ -70,7 +70,7 @@ func Retrieve() ([]NetRoute, error) {
 		case nil:
 			break
 		case *route.Inet4Addr:
-			destStr = bytes2IPv4(dest.(*route.Inet4Addr).IP)
+			destStr = bytes2IPv4(dest.(*route.Inet4Addr).IP, false)
 		default:
 			destStr = "unk"
 		}
@@ -87,7 +87,7 @@ func Retrieve() ([]NetRoute, error) {
 		case nil:
 			netmaskStr = "0"
 		case *route.Inet4Addr:
-			netmaskStr = bytes2IPv4(netmaskOri.(*route.Inet4Addr).IP)
+			netmaskStr = bytes2IPv4(netmaskOri.(*route.Inet4Addr).IP, false)
 		default:
 			netmaskStr = "unk"
 		}
@@ -96,7 +96,7 @@ func Retrieve() ([]NetRoute, error) {
 		var gatewayStr = ""
 		switch gateway.(type) {
 		case *route.Inet4Addr:
-			gatewayStr = bytes2IPv4(gateway.(*route.Inet4Addr).IP)
+			gatewayStr = bytes2IPv4(gateway.(*route.Inet4Addr).IP, false)
 		case *route.LinkAddr:
 			gatewayTmp := gateway.(*route.LinkAddr)
 			gatewayStr = "link#" + strconv.Itoa(gatewayTmp.Index)
@@ -117,7 +117,7 @@ func Retrieve() ([]NetRoute, error) {
 		} else {
 			switch netIfAddr.(type) {
 			case (*route.Inet4Addr):
-				netIfStr = bytes2IPv4(netIfAddr.(*route.Inet4Addr).IP)
+				netIfStr = bytes2IPv4(netIfAddr.(*route.Inet4Addr).IP, false)
 			default:
 				netIfStr = "unk"
 			}
@@ -136,19 +136,19 @@ func Retrieve() ([]NetRoute, error) {
 }
 func RetrieveFlagFromRIB(flags int) string {
 	data := RouteFlag{
-		U:        flags&RTF_UP != 0,
-		H:        flags&RTF_HOST != 0,
-		G:        flags&RTF_GATEWAY != 0,
-		S:        flags&RTF_STATIC != 0,
+		U:        flags&syscall.RTF_UP != 0,
+		H:        flags&syscall.RTF_HOST != 0,
+		G:        flags&syscall.RTF_GATEWAY != 0,
+		S:        flags&syscall.RTF_STATIC != 0,
 		Cloned:   flags&RTF_CLONING != 0,
 		W:        false,
 		L:        false,
 		Reinsta:  false,
-		D:        flags&RTF_DYNAMIC != 0,
-		M:        flags&RTF_MODIFIED != 0,
+		D:        flags&syscall.RTF_DYNAMIC != 0,
+		M:        flags&syscall.RTF_MODIFIED != 0,
 		A:        false,
 		Cached:   false,
-		Rejected: flags&RTF_REJECT != 0,
+		Rejected: flags&syscall.RTF_REJECT != 0,
 	}
 	return data.ToTableString()
 }
