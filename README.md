@@ -29,9 +29,7 @@ Parse /proc/net/route file.
 
 ## Note
 
-might need root permission on Mac OS.
-
-Tested on Windows 7,10; Linux; Mac OS Monetrery
+Tested on Windows 7,10; Linux; Mac OS Monetrery.
 
 ## Usage
 
