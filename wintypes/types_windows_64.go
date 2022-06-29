@@ -1,8 +1,10 @@
-//go:build windows && (386 || arm)
+//go:build windows && (amd64 || arm64)
 
-package routes
+package wintypes
 
-// Types defined here ONLY works for 32-bit.
+import "golang.org/x/sys/windows"
+
+// Types defined here ONLY works for 64-bit.
 // Code from wireguard is licensed under MIT.
 // Totally Grabbed from https://github.com/wireguard/wireguard-windows , tunnel/winipcfg/types.go
 
@@ -10,7 +12,6 @@ package routes
 // https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/ns-netioapi-_mib_ipforward_table2
 type mibIPforwardTable2 struct {
 	numEntries uint32
-	_          [4]byte
 	table      [anySize]MibIPforwardRow2
 }
 
@@ -38,7 +39,6 @@ type MibIfRow2 struct {
 	MediaConnectState           NetIfMediaConnectState
 	NetworkGUID                 windows.GUID
 	ConnectionType              NetIfConnectionType
-	_                           [4]byte
 	TransmitLinkSpeed           uint64
 	ReceiveLinkSpeed            uint64
 	InOctets                    uint64

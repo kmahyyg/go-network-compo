@@ -3,7 +3,7 @@
 package routes
 
 import (
-	"github.com/kmahyyg/go-network-compo/common"
+	"github.com/kmahyyg/go-network-compo/utils"
 	"golang.org/x/net/route"
 	"strconv"
 	"syscall"
@@ -71,7 +71,7 @@ func Retrieve() ([]NetRoute, error) {
 		case nil:
 			break
 		case *route.Inet4Addr:
-			destStr = common.Bytes2IPv4(dest.(*route.Inet4Addr).IP, false)
+			destStr = utils.Bytes2IPv4(dest.(*route.Inet4Addr).IP, false)
 		default:
 			destStr = "unk"
 		}
@@ -88,7 +88,7 @@ func Retrieve() ([]NetRoute, error) {
 		case nil:
 			netmaskStr = "0"
 		case *route.Inet4Addr:
-			netmaskStr = common.Bytes2IPv4(netmaskOri.(*route.Inet4Addr).IP, false)
+			netmaskStr = utils.Bytes2IPv4(netmaskOri.(*route.Inet4Addr).IP, false)
 		default:
 			netmaskStr = "unk"
 		}
@@ -97,14 +97,14 @@ func Retrieve() ([]NetRoute, error) {
 		var gatewayStr = ""
 		switch gateway.(type) {
 		case *route.Inet4Addr:
-			gatewayStr = common.Bytes2IPv4(gateway.(*route.Inet4Addr).IP, false)
+			gatewayStr = utils.Bytes2IPv4(gateway.(*route.Inet4Addr).IP, false)
 		case *route.LinkAddr:
 			gatewayTmp := gateway.(*route.LinkAddr)
 			gatewayStr = "link#" + strconv.Itoa(gatewayTmp.Index)
 			if gatewayTmp.Name != "" {
 				gatewayStr = gatewayTmp.Name
 			} else if gatewayTmp.Addr != nil {
-				gatewayStr += "@" + common.Bytes2HWAddr_MACAddr(gatewayTmp.Addr)
+				gatewayStr += "@" + utils.Bytes2HWAddr_MACAddr(gatewayTmp.Addr)
 			}
 		default:
 			gatewayStr = "unk"
@@ -118,7 +118,7 @@ func Retrieve() ([]NetRoute, error) {
 		} else {
 			switch netIfAddr.(type) {
 			case (*route.Inet4Addr):
-				netIfStr = common.Bytes2IPv4(netIfAddr.(*route.Inet4Addr).IP, false)
+				netIfStr = utils.Bytes2IPv4(netIfAddr.(*route.Inet4Addr).IP, false)
 			default:
 				netIfStr = "unk"
 			}

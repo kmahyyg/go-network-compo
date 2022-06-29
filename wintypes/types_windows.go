@@ -1,4 +1,4 @@
-package routes
+package wintypes
 
 import (
 	"encoding/binary"

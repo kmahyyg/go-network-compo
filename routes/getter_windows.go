@@ -3,13 +3,14 @@
 package routes
 
 import (
+	"github.com/kmahyyg/go-network-compo/wintypes"
 	"strconv"
 )
 
 // module impl
 
 func Retrieve() ([]NetRoute, error) {
-	routingTable, err := GetIPForwardTable2(AddressFamily(AF_INET))
+	routingTable, err := wintypes.GetIPForwardTable2(wintypes.AddressFamily(wintypes.AF_INET))
 	if err != nil {
 		return nil, err
 	}
@@ -32,9 +33,9 @@ func Retrieve() ([]NetRoute, error) {
 	return netRoutes, nil
 }
 
-func RetrieveFlagFromMibRow2(mibIfRow *MibIfRow2, mibIpFwdRow *MibIPforwardRow2) string {
+func RetrieveFlagFromMibRow2(mibIfRow *wintypes.MibIfRow2, mibIpFwdRow *wintypes.MibIPforwardRow2) string {
 	return RouteFlag{
-		U:        mibIfRow.OperStatus == IfOperStatusUp && mibIpFwdRow.Publish,
+		U:        mibIfRow.OperStatus == wintypes.IfOperStatusUp && mibIpFwdRow.Publish,
 		H:        int(mibIpFwdRow.DestinationPrefix.PrefixLength) == 32,
 		G:        mibIpFwdRow.DestinationPrefix.RawPrefix.Addr().String() == "0.0.0.0",
 		S:        mibIpFwdRow.Immortal,

@@ -1,6 +1,6 @@
 //go:build windows
 
-package routes
+package wintypes
 
 // Code from wireguard is licensed under MIT.
 // Totally Grabbed from https://github.com/wireguard/wireguard-windows , tunnel/winipcfg/winipcfg.go
