@@ -600,13 +600,13 @@ func (row *MibIfRow2) get() (ret error) {
 }
 
 // get method returns all table rows as a Go slice.
-func (tab *mibIfTable2) get() (s []MibIfRow2) {
+func (tab *MibIfTable2) get() (s []MibIfRow2) {
 	return unsafe.Slice(&tab.table[0], tab.numEntries)
 }
 
 // free method frees the buffer allocated by the functions that return tables of network interfaces, addresses, and routes.
 // https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/nf-netioapi-freemibtable
-func (tab *mibIfTable2) free() {
+func (tab *MibIfTable2) free() {
 	freeMibTable(unsafe.Pointer(tab))
 }
 
@@ -625,6 +625,10 @@ type DnsInterfaceSettings struct {
 	EnableLLMNR         uint32
 	QueryAdapterName    uint32
 	ProfileNameServer   *uint16
+}
+
+func (dnsifset *DnsInterfaceSettings) Free() {
+	freeInterfaceDnsSettings(unsafe.Pointer(dnsifset))
 }
 
 const (

@@ -18,3 +18,15 @@ func Bytes2HWAddr_MACAddr(b []byte) string {
 	}
 	return fmt.Sprintf("%.2x:%.2x:%.2x:%.2x:%.2x:%.2x", b[0], b[1], b[2], b[3], b[4], b[5])
 }
+
+func DeduplicateStrInSlice(strSlice []string) []string {
+	allKeys := make(map[string]bool)
+	list := []string{}
+	for _, item := range strSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
