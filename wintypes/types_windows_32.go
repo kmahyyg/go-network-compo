@@ -60,3 +60,11 @@ type MibIfRow2 struct {
 	OutBroadcastOctets          uint64
 	OutQLen                     uint64
 }
+
+// mibIfTable2 structure contains a table of logical and physical interface entries.
+// https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/ns-netioapi-_mib_if_table2
+type MibIfTable2 struct {
+	numEntries uint32
+	_          [4]byte
+	table      [anySize]MibIfRow2
+}
