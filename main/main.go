@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/kmahyyg/go-routetable/routes"
+	"github.com/kmahyyg/go-network-compo/routes"
 )
 
 func main() {

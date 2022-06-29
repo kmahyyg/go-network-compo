@@ -1,4 +1,4 @@
-module github.com/kmahyyg/go-routetable
+module github.com/kmahyyg/go-network-compo
 
 go 1.18
 
