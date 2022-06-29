@@ -1,12 +1,14 @@
-# go-routetable
+# go-network-compo
 
-Golang Fetch System Route Table
+Golang - System native network components
+
+## DNS settings
 
 ## Route Table
 
 Fetch Route Table from System
 
-## Implementation
+### Implementation
 
 Mac OS / BSD variant:
 
@@ -33,3 +35,4 @@ Tested on Windows 7,10; Linux; Mac OS Monetrery.
 
 ## Usage
 
+Routes: `routes.Retrieve()`
