@@ -5,42 +5,45 @@ package dns
 import (
 	"github.com/kmahyyg/go-network-compo/wintypes"
 	"golang.org/x/sys/windows"
-	"strings"
 )
 
-func Retrieve() (string, error) {
-	// Fetch all Interfaces
-	ifaces, err := wintypes.GetIfTable2()
-	if err != nil {
-		return "", err
-	}
-	var sb strings.Builder
-	for _, sIf := range ifaces {
-		if sIf.OperStatus != wintypes.IfOperStatusUp {
-			continue
+func Retrieve(manualSets bool) (map[string]string, error) {
+	ifaceDNSmap := make(map[string]string, 0)
+	if manualSets { // Fetch all Interfaces
+		ifaces, err := wintypes.GetIfTable2()
+		if err != nil {
+			return nil, err
 		}
-		func() {
-			dnsIfSetting := &wintypes.DnsInterfaceSettings{Version: wintypes.DnsInterfaceSettingsVersion1}
-			defer dnsIfSetting.Free()
-			err = wintypes.GetInterfaceDnsSettings(&sIf.InterfaceGUID, dnsIfSetting)
-			if err != nil {
-				return
+		for _, sIf := range ifaces {
+			if sIf.OperStatus != wintypes.IfOperStatusUp {
+				continue
 			}
-			if dnsIfSetting.NameServer == nil {
-				return
-			}
-			var nsStr, profileNsStr string
-			nsStr = windows.UTF16PtrToString(dnsIfSetting.NameServer)
-			if dnsIfSetting.ProfileNameServer != nil {
-				profileNsStr = windows.UTF16PtrToString(dnsIfSetting.ProfileNameServer)
-			}
-			if len(nsStr) != 0 {
-				sb.WriteString(nsStr + " [" + sIf.Alias() + "]\n")
-			}
-			if len(profileNsStr) != 0 {
-				sb.WriteString(profileNsStr + " [" + sIf.Alias() + "]\n")
-			}
-		}()
+			func() {
+				dnsIfSetting := &wintypes.DnsInterfaceSettings{Version: wintypes.DnsInterfaceSettingsVersion1}
+				defer dnsIfSetting.Free()
+				err = wintypes.GetInterfaceDnsSettings(&sIf.InterfaceGUID, dnsIfSetting)
+				if err != nil {
+					return
+				}
+				if dnsIfSetting.NameServer == nil {
+					return
+				}
+				var nsStr, profileNsStr, finalNsStr string
+				nsStr = windows.UTF16PtrToString(dnsIfSetting.NameServer)
+				if dnsIfSetting.ProfileNameServer != nil {
+					profileNsStr = windows.UTF16PtrToString(dnsIfSetting.ProfileNameServer)
+				}
+				if len(nsStr) != 0 {
+					finalNsStr += nsStr
+				}
+				if len(profileNsStr) != 0 {
+					finalNsStr += profileNsStr
+				}
+				ifaceDNSmap[sIf.Alias()] = finalNsStr
+			}()
+		}
+	} else {
+
 	}
-	return sb.String(), nil
+	return ifaceDNSmap, nil
 }
