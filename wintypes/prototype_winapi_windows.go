@@ -4,6 +4,7 @@ package wintypes
 
 import (
 	"golang.org/x/sys/windows"
+	"unsafe"
 )
 
 // Code from wireguard is licensed under MIT.
@@ -20,6 +21,7 @@ import (
 //sys	createIPForwardEntry2(route *MibIPforwardRow2) (ret error) = iphlpapi.CreateIpForwardEntry2
 //sys	deleteIPForwardEntry2(route *MibIPforwardRow2) (ret error) = iphlpapi.DeleteIpForwardEntry2
 //sys	getIPForwardTable2(family AddressFamily, table **mibIPforwardTable2) (ret error) = iphlpapi.GetIpForwardTable2
+//sys   dnsQueryConfig(config DnsConfigType, flag uint32, wsAdapterName *uint16, reserved uintptr, buffer uintptr, buflen *uint32) (ret error) = dnsapi.DnsQueryConfig
 
 // GetIPForwardTable2 function retrieves the IP route entries on the local computer.
 // https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/nf-netioapi-getipforwardtable2
@@ -56,4 +58,23 @@ func GetInterfaceDnsSettings(iface *windows.GUID, settings *DnsInterfaceSettings
 		return err
 	}
 	return nil
+}
+
+// DnsQueryConfig enables application programmers to query for the configuration of the local
+// computer or a specific adapter.
+// https://docs.microsoft.com/en-us/windows/win32/api/windns/nf-windns-dnsqueryconfig
+// GetDNSServerList is hardcoded here, bufLen is used for retrying when met ERROR_MORE_DATA.
+func DnsQueryConfig_DNSServerList(bufLen int) (data string, ret error) {
+	buf := make([]byte, bufLen)
+	bufLenDWORD := uint32(bufLen)
+	nullPtr16 := uint16(0)
+	err := dnsQueryConfig(DnsConfigDnsServerList, uint32(0), &nullPtr16, uintptr(0), uintptr(unsafe.Pointer(&buf)), &bufLenDWORD)
+	if err != nil {
+		return "", err
+	}
+	// return buf as IP4_ARRAY
+	// https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-ip4_array
+	// similar procedure as anySize Array
+	// https://cs.github.com/namealt/winsdk10/blob/d1acc505c51b11a6ceafb0f93c9dc584b8b4a9d3/Include/10.0.14393.0/um/WinDNS.h#L70
+	//TODO
 }

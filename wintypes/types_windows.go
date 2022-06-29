@@ -651,3 +651,27 @@ const (
 	DnsInterfaceSettingsFlagDOH                         = 0x1000 // v3 only
 	DnsInterfaceSettingsFlagDOHProfile                  = 0x2000 // v3 only
 )
+
+type DnsConfigType uint32
+
+const (
+	DnsConfigPrimaryDomainName_W DnsConfigType = iota
+	DnsConfigPrimaryDomainName_A
+	DnsConfigPrimaryDomainName_UTF8
+	DnsConfigAdapterDomainName_W
+	DnsConfigAdapterDomainName_A
+	DnsConfigAdapterDomainName_UTF8
+	DnsConfigDnsServerList
+	DnsConfigSearchList
+	DnsConfigAdapterInfo
+	DnsConfigPrimaryHostNameRegistrationEnabled
+	DnsConfigAdapterHostNameRegistrationEnabled
+	DnsConfigAddressRegistrationMaxCount
+	DnsConfigHostName_W
+	DnsConfigHostName_A
+	DnsConfigHostName_UTF8
+	DnsConfigFullHostName_W
+	DnsConfigFullHostName_A
+	DnsConfigFullHostName_UTF8
+	DnsConfigNameServer
+)
