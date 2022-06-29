@@ -65,6 +65,6 @@ type MibIfRow2 struct {
 // https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/ns-netioapi-_mib_if_table2
 type MibIfTable2 struct {
 	numEntries uint32
-	_          [4]byte
+	_          [4]byte // aligned with the most longest built-in field type， https://docs.microsoft.com/en-us/windows/win32/midl/c-compiler-packing-issues
 	table      [anySize]MibIfRow2
 }

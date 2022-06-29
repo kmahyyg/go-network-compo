@@ -48,6 +48,6 @@ func GetIfTable2() ([]MibIfRow2, error) {
 
 // GetInterfaceDnsSettings Retrieves the DNS settings from the interface specified in the Interface parameter.
 // https://docs.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-getinterfacednssettings
-func GetInterfaceDnsSettings(ifguid windows.GUID, ) (ret error) {
+func GetInterfaceDnsSettingsV1(ifguid *windows.GUID, settings *DnsInterfaceSettings) (ret error) {
 
 }

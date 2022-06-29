@@ -609,3 +609,41 @@ func (tab *mibIfTable2) get() (s []MibIfRow2) {
 func (tab *mibIfTable2) free() {
 	freeMibTable(unsafe.Pointer(tab))
 }
+
+// DNS_INTERFACE_SETTINGS Represents the DNS settings
+// version 1: https://docs.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-dns_interface_settings
+// DnsInterfaceSettings is meant to be used with SetInterfaceDnsSettings
+type DnsInterfaceSettings struct {
+	Version             uint32
+	_                   [4]byte
+	Flags               uint64
+	Domain              *uint16
+	NameServer          *uint16
+	SearchList          *uint16
+	RegistrationEnabled uint32
+	RegisterAdapterName uint32
+	EnableLLMNR         uint32
+	QueryAdapterName    uint32
+	ProfileNameServer   *uint16
+}
+
+const (
+	DnsInterfaceSettingsVersion1 = 1 // for DnsInterfaceSettings
+	DnsInterfaceSettingsVersion2 = 2 // for DnsInterfaceSettingsEx
+	DnsInterfaceSettingsVersion3 = 3 // for DnsInterfaceSettings3
+
+	DnsInterfaceSettingsFlagIPv6                        = 0x0001
+	DnsInterfaceSettingsFlagNameserver                  = 0x0002
+	DnsInterfaceSettingsFlagSearchList                  = 0x0004
+	DnsInterfaceSettingsFlagRegistrationEnabled         = 0x0008
+	DnsInterfaceSettingsFlagRegisterAdapterName         = 0x0010
+	DnsInterfaceSettingsFlagDomain                      = 0x0020
+	DnsInterfaceSettingsFlagHostname                    = 0x0040
+	DnsInterfaceSettingsFlagEnableLLMNR                 = 0x0080
+	DnsInterfaceSettingsFlagQueryAdapterName            = 0x0100
+	DnsInterfaceSettingsFlagProfileNameserver           = 0x0200
+	DnsInterfaceSettingsFlagDisableUnconstrainedQueries = 0x0400 // v2 only
+	DnsInterfaceSettingsFlagSupplementalSearchList      = 0x0800 // v2 only
+	DnsInterfaceSettingsFlagDOH                         = 0x1000 // v3 only
+	DnsInterfaceSettingsFlagDOHProfile                  = 0x2000 // v3 only
+)
