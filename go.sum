@@ -1,5 +1,3 @@
-golang.org/x/net v0.0.0-20220614195744-fb05da6f9022 h1:0qjDla5xICC2suMtyRH/QqX3B1btXTfNsIt/i4LFgO0=
-golang.org/x/net v0.0.0-20220614195744-fb05da6f9022/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
 golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 h1:Yqz/iviulwKwAREEeUd3nbBFn0XuyJqkoft2IlrvOhc=
 golang.org/x/net v0.0.0-20220617184016-355a448f1bc9/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
 golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c h1:aFV+BgZ4svzjfabn8ERpuB4JI4N6/rdy1iusx77G3oU=
