@@ -61,7 +61,7 @@ func Retrieve(manualSets bool) (map[string]string, error) {
 		}
 		// if systemd-resolved is running, run blame
 		if resolvedFound {
-			cmd := exec.Command("/bin/bash", "-c", "resolvectl status")
+			cmd := exec.Command("/bin/sh", "-c", "resolvectl status")
 			optData, err := cmd.Output()
 			if err != nil {
 				return nil, err
