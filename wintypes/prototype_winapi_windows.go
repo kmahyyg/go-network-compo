@@ -3,7 +3,9 @@
 package wintypes
 
 import (
+	"github.com/kmahyyg/go-network-compo/utils"
 	"golang.org/x/sys/windows"
+	"net"
 	"unsafe"
 )
 
@@ -21,7 +23,7 @@ import (
 //sys	createIPForwardEntry2(route *MibIPforwardRow2) (ret error) = iphlpapi.CreateIpForwardEntry2
 //sys	deleteIPForwardEntry2(route *MibIPforwardRow2) (ret error) = iphlpapi.DeleteIpForwardEntry2
 //sys	getIPForwardTable2(family AddressFamily, table **mibIPforwardTable2) (ret error) = iphlpapi.GetIpForwardTable2
-//sys   dnsQueryConfig(config DnsConfigType, flag uint32, wsAdapterName *uint16, reserved uintptr, buffer uintptr, buflen *uint32) (ret error) = dnsapi.DnsQueryConfig
+//sys   dnsQueryConfig(config DnsConfigType, flag uint32, wsAdapterName uintptr, reserved uintptr, buffer *byte, buflen *uint32) (ret error) = dnsapi.DnsQueryConfig
 
 // GetIPForwardTable2 function retrieves the IP route entries on the local computer.
 // https://docs.microsoft.com/en-us/windows/desktop/api/netioapi/nf-netioapi-getipforwardtable2
@@ -64,17 +66,23 @@ func GetInterfaceDnsSettings(iface *windows.GUID, settings *DnsInterfaceSettings
 // computer or a specific adapter.
 // https://docs.microsoft.com/en-us/windows/win32/api/windns/nf-windns-dnsqueryconfig
 // GetDNSServerList is hardcoded here, bufLen is used for retrying when met ERROR_MORE_DATA.
-func DnsQueryConfig_DNSServerList(bufLen int) (data string, ret error) {
-	buf := make([]byte, bufLen)
+func DnsQueryConfig_DNSServerList() (data []net.IP, ret error) {
+	bufLen := 64
+	ip4Arr := make([]byte, bufLen)
 	bufLenDWORD := uint32(bufLen)
-	nullPtr16 := uint16(0)
-	err := dnsQueryConfig(DnsConfigDnsServerList, uint32(0), &nullPtr16, uintptr(0), uintptr(unsafe.Pointer(&buf)), &bufLenDWORD)
+	err := dnsQueryConfig(DnsConfigDnsServerList, 0, 0, 0, &ip4Arr[0], &bufLenDWORD)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// return buf as IP4_ARRAY
 	// https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-ip4_array
 	// similar procedure as anySize Array
 	// https://cs.github.com/namealt/winsdk10/blob/d1acc505c51b11a6ceafb0f93c9dc584b8b4a9d3/Include/10.0.14393.0/um/WinDNS.h#L70
-	//TODO
+	ip4a := (*Ip4Array)(unsafe.Pointer(&ip4Arr[0]))
+	t := append(make([]Ip4Address, 0, ip4a.AddrCount), ip4a.get()...)
+	data = make([]net.IP, ip4a.AddrCount)
+	for i, v := range t {
+		data[i] = utils.Uint32ToNetIP_LittleEndian(v)
+	}
+	return data, nil
 }

@@ -675,3 +675,20 @@ const (
 	DnsConfigFullHostName_UTF8
 	DnsConfigNameServer
 )
+
+const DnsConfigFlagAlloc = 1
+
+// IP4_ADDRESS represents an Internet Protocol version 4 (IPv4) address.
+// https://docs.microsoft.com/en-us/windows/win32/dns/dns-data-types
+type Ip4Address = uint32
+
+// IP4_ARRAY structure stores an array of IPv4 addresses.
+// https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-ip4_array
+type Ip4Array struct {
+	AddrCount uint32
+	AddrArray [anySize]Ip4Address
+}
+
+func (i4a *Ip4Array) get() (s []Ip4Address) {
+	return unsafe.Slice(&i4a.AddrArray[0], i4a.AddrCount)
+}

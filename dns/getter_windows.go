@@ -43,7 +43,15 @@ func Retrieve(manualSets bool) (map[string]string, error) {
 			}()
 		}
 	} else {
-
+		var finalNsStr string
+		data, err := wintypes.DnsQueryConfig_DNSServerList()
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range data {
+			finalNsStr += v.String() + " "
+		}
+		ifaceDNSmap["Automatic"] = finalNsStr[:len(finalNsStr)-1]
 	}
 	return ifaceDNSmap, nil
 }

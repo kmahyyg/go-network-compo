@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"net"
 )
 
 func Bytes2IPv4(b [4]byte, isLinux bool) string {
@@ -29,4 +31,10 @@ func DeduplicateStrInSlice(strSlice []string) []string {
 		}
 	}
 	return list
+}
+
+func Uint32ToNetIP_LittleEndian(data uint32) (ip4 net.IP) {
+	ip4 = make(net.IP, 4)
+	binary.LittleEndian.PutUint32(ip4, data)
+	return
 }
