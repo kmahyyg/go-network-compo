@@ -39,7 +39,10 @@ func Retrieve(manualSets bool) (map[string]string, error) {
 				if len(profileNsStr) != 0 {
 					finalNsStr += profileNsStr
 				}
-				ifaceDNSmap[sIf.Alias()] = finalNsStr
+				// must > 2, either two CRLF or spaces here.
+				if len(finalNsStr) > 2 {
+					ifaceDNSmap[sIf.Alias()] = finalNsStr
+				}
 			}()
 		}
 	} else {
