@@ -2,10 +2,11 @@ package wintypes
 
 import (
 	"encoding/binary"
-	"golang.org/x/sys/windows"
 	"net/netip"
 	"strconv"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 // Types defined here does not need to judge 32bit or 64bit.
@@ -426,7 +427,7 @@ const (
 type AddressFamily uint16
 
 // RawSockaddrInet union contains an IPv4, an IPv6 address, or an address family.
-// https://docs.microsoft.com/en-us/windows/desktop/api/ws2ipdef/ns-ws2ipdef-_sockaddr_inet
+// https://docs.microsoft.com/en-us/windows/desktop/api/ws2ipdef/ns-ws2ipdef-sockaddr_inet
 type RawSockaddrInet struct {
 	Family AddressFamily
 	data   [26]byte
