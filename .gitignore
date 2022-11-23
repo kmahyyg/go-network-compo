@@ -14,5 +14,4 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-!gen_winapi_*.go
 .DS_Store
