@@ -95,9 +95,12 @@ func Retrieve(manualSets bool) (map[string]string, error) {
 			} else if err != nil && err != io.EOF {
 				return nil, err
 			}
+			curLineBytes := resolvLines.Bytes()
 			// ignore comment
-			if resolvLines.Bytes()[0] == byte('#') {
-				continue
+			if len(curLineBytes) != 0 {
+				if curLineBytes[0] == byte('#') {
+					continue
+				}
 			} else {
 				// match IP addr
 				ret := rxIP4Matcher.FindString(resolvLines.Text())
