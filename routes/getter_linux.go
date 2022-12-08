@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"github.com/kmahyyg/go-network-compo/utils"
 )
 
 const (
@@ -85,8 +86,8 @@ func Retrieve() ([]NetRoute, error) {
 		// build s-nr
 		singleNR := NetRoute{
 			Metric:      uint32(metricNum),
-			Destination: common.Bytes2IPv4(destIPbytes, true) + "/" + common.Bytes2IPv4(destMaskIPbytes, true),
-			Gateway:     common.Bytes2IPv4(gatewayIPBytes, true),
+			Destination: utils.Bytes2IPv4(destIPbytes, true) + "/" + common.Bytes2IPv4(destMaskIPbytes, true),
+			Gateway:     utils.Bytes2IPv4(gatewayIPBytes, true),
 			Flags:       buildRouteFlagsFromRouteRow(int(flagInt)),
 			NetIf:       routeRow[0],
 		}
